@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*- 
-require 'thread'
 require 'nokogiri'
 require 'open-uri'
 require 'parallel'
@@ -34,14 +33,25 @@ images = getImageLinks("http://blog.livedoor.jp/vipperchannel41/archives/2515412
 #}
 
 Parallel.map(images, :in_threads => 10) {|item|
-	FileUtils.mkdir_p(item.title) unless FileTest.exist?(item.title)
-	Dir::chdir(item.title)
+	dirname = ""
+	if(RUBY_PLATFORM.downcase =~ /mswin(?!ce)|mingw|cygwin|bccwin/)
+		dirname = "save"
+	else
+		dirname = item.title
+		#FileUtils.mkdir_p(item.title) unless FileTest.exist?(item.title)
+	end
+	FileUtils.mkdir_p(dirname) unless FileTest.exist?(dirname)
+	#Dir::chdir(dirname)
 	puts "download: #{item.url}"
 	open(item.url) do |source|
-		open(File.basename(item.url), "w+b") do |o|
+		open(dirname + "/" + File.basename(item.url), "w+b") do |o|
 			o.print source.read
 		end
 	end
+	#if(RUBY_PLATFORM.downcase =~ /mswin(?!ce)|mingw|cygwin|bccwin/)
+	#	Dir::chdir("..\\")
+	#else
+	#	Dir::chdir("../")
+	#end
 	puts "downloaded: #{item.url}"
-	Dir::chdir("../")
 }
